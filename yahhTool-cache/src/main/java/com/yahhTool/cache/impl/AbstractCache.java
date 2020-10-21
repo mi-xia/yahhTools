@@ -29,7 +29,16 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
      */
     protected int capcity;
 
-    //----------------------------------------------------------- put star
+    /**
+     * 命中数
+     */
+    protected int hitCount;
+    /**
+     * 丢失数
+     */
+    protected int missCount;
+
+    /************************************************************** put star ****/
 
     @Override
     public void put(K key, V object) {
@@ -56,10 +65,109 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
         cacheObjcetMap.put(key,cacheObjcet);
     }
 
-    //----------------------------------------------------------- put end
+    /************************************************************** put end ****/
 
 
-    //----------------------------------------------------------- 缓存清理相关
+    /************************************************************** get start ****/
+
+    @Override
+    public V get(K key) {
+        return get(key,true);
+    }
+
+    @Override
+    public V get(K key, Boolean isUpdateLastAccess) {
+
+        final long stamp = lock.readLock();
+
+        try {
+            final CacheObjcet<K,V> cacheObjcet = cacheObjcetMap.get(key);
+
+            if (null == cacheObjcet){
+                this.missCount++;
+                return null;
+            }
+            if (cacheObjcet.isExpired()){
+                this.missCount++;
+                remove(key,true);
+                return null;
+            } else {
+                hitCount++;
+                return cacheObjcet.getObj(isUpdateLastAccess);
+            }
+        } finally {
+            lock.unlockRead(stamp);
+        }
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+
+        final long stamp = lock.readLock();
+
+        try {
+            final CacheObjcet cacheObjcet = cacheObjcetMap.get(key);
+            if (null == cacheObjcet){
+                // 未命中
+                return false;
+            }
+            if (!cacheObjcet.isExpired()){
+                // 命中
+                return true;
+            }
+        } finally {
+            lock.unlockRead(stamp);
+        }
+
+        // 已过期的key需要删除
+        remove(key,true);
+        return false;
+    }
+
+    /************************************************************** get end ****/
+
+
+    /************************************************************** 缓存清理相关 ****/
+
+    @Override
+    public void clear() {
+        final long stamp = lock.writeLock();
+        try {
+            cacheObjcetMap.clear();
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
+    @Override
+    public void remove(K key, boolean withMissCount) {
+        final long stamp = lock.writeLock();
+        CacheObjcet<K,V> cacheObjcet;
+        try {
+            cacheObjcet = removeWithoutLock(key, withMissCount);
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+
+        if (null != cacheObjcet){
+            removeRollback(key,cacheObjcet.obj);
+        }
+
+    }
+
+    protected CacheObjcet<K,V> removeWithoutLock(K key, boolean withMissCount){
+
+        final CacheObjcet<K,V> cacheObjcet = cacheObjcetMap.remove(key);
+        if (withMissCount){
+            this.missCount++;
+        }
+
+        return cacheObjcet;
+    }
+
+    private void removeRollback(K key, V cacheObjcet){
+
+    }
 
     @Override
     public boolean ifFull() {
@@ -85,7 +193,36 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
     protected abstract int pruneCache();
 
 
+    /************************************************************** other ****/
 
+    /**
+     * @return 命中数
+     */
+    public int getHitCount() {
+        return hitCount;
+    }
 
+    /**
+     * @return 丢失数
+     */
+    public int getMissCount() {
+        return missCount;
+    }
 
+    @Override
+    public int capcity() { return capcity; }
+
+    @Override
+    public long timeout() { return timeout; }
+
+    @Override
+    public int size() { return cacheObjcetMap.size(); }
+
+    @Override
+    public boolean isEmpty() { return cacheObjcetMap.isEmpty(); }
+
+    @Override
+    public String toString() {
+        return this.cacheObjcetMap.toString();
+    }
 }

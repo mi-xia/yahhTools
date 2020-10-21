@@ -19,7 +19,7 @@ public interface yahhCache<K,V> extends Iterable<V>, Serializable {
     /**
      * @return 单位毫秒，缓存失效时间， 0代表无限制
      */
-    int timeout();
+    long timeout();
 
     /**
      * 放入缓存，使用默认失效时长
@@ -60,11 +60,11 @@ public interface yahhCache<K,V> extends Iterable<V>, Serializable {
     V get(K key, Boolean isUpdateLastAccess);
 
     /**
-     * 缓存中移除duixiang
+     * 缓存中移除对象
      * @param key
      * @return
      */
-    void remove(K key);
+    void remove(K key, boolean withMissCount);
 
     /**
      * 清空缓存
