@@ -30,10 +30,10 @@ public class CacheObjcet<K,V> implements Serializable {
      */
     protected long accessCount;
 
-    protected CacheObjcet(K key, V obj, long lastAccsess, long ttl) {
+    protected CacheObjcet(K key, V obj, long ttl) {
         this.key = key;
         this.obj = obj;
-        this.lastAccsess = lastAccsess;
+        this.lastAccsess = System.currentTimeMillis();
         this.ttl = ttl;
     }
 

@@ -89,6 +89,12 @@ public interface yahhCache<K,V> extends Iterable<V>, Serializable {
     boolean containsKey(K key);
 
     /**
+     * 针对有容量的缓存，检查缓存是否已满
+     * @return
+     */
+    boolean ifFull();
+
+    /**
      * 清理过期对象
      * @return
      */

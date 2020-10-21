@@ -29,6 +29,8 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
      */
     protected int capcity;
 
+    //----------------------------------------------------------- put star
+
     @Override
     public void put(K key, V object) {
         put(key, object, timeout);
@@ -39,11 +41,49 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
         final long stamp = lock.writeLock();
 
         try {
-
+            putWithoutLock(key, object, timeout);
         } finally {
             lock.unlockWrite(stamp);
         }
     }
+
+    private void putWithoutLock(K key, V object, Long timeout){
+        CacheObjcet<K,V> cacheObjcet = new CacheObjcet<>(key,object,timeout);
+
+        if (ifFull()){
+            pruneCache();
+        }
+        cacheObjcetMap.put(key,cacheObjcet);
+    }
+
+    //----------------------------------------------------------- put end
+
+
+    //----------------------------------------------------------- 缓存清理相关
+
+    @Override
+    public boolean ifFull() {
+        return (capcity > 0 ) && (cacheObjcetMap.size() >= capcity);
+    }
+
+    @Override
+    public int prune() {
+
+        final long stamp = lock.writeLock();
+
+        try {
+            return pruneCache();
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
+    /**
+     * 清缓存具体实现
+     * @return
+     */
+    protected abstract int pruneCache();
+
 
 
 
