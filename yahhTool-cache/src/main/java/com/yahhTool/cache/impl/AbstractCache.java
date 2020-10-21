@@ -10,6 +10,7 @@ import com.yahhTool.cache.yahhCache;
  */
 public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
 
+    private static final long serialVersionUID = -3295830666555010122L;
 
 
 
