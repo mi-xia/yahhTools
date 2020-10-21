@@ -28,7 +28,7 @@ public interface yahhCache<K,V> extends Iterable<V>, Serializable {
      * @return
      * @see yahhCache#put(Object, Object, Long)
      */
-    boolean put(K key, V object);
+    void put(K key, V object);
 
     /**
      * 自定义失效时长
@@ -37,7 +37,7 @@ public interface yahhCache<K,V> extends Iterable<V>, Serializable {
      * @param timeout 失效时长
      * @return
      */
-    boolean put(K key, V object, Long timeout);
+    void put(K key, V object, Long timeout);
 
 
     /**
@@ -64,13 +64,13 @@ public interface yahhCache<K,V> extends Iterable<V>, Serializable {
      * @param key
      * @return
      */
-    boolean remove(K key);
+    void remove(K key);
 
     /**
      * 清空缓存
      * @return
      */
-    boolean clear();
+    void clear();
 
     /**
      * 缓存对象的数量
