@@ -2,8 +2,11 @@ package com.yahhTool.cache.impl;
 
 import com.yahhTool.cache.yahhCache;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Spliterator;
 import java.util.concurrent.locks.StampedLock;
+import java.util.function.Consumer;
 
 /**
  * @author 邹磊
@@ -38,6 +41,11 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
      */
     protected int missCount;
 
+    /**
+     * 每个对象是否有单独的失效时长
+     */
+    protected boolean existCustomTimeout;
+
     /************************************************************** put star ****/
 
     @Override
@@ -58,6 +66,10 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
 
     private void putWithoutLock(K key, V object, Long timeout){
         CacheObjcet<K,V> cacheObjcet = new CacheObjcet<>(key,object,timeout);
+
+        if (timeout != 0){
+            existCustomTimeout = true;
+        }
 
         if (ifFull()){
             pruneCache();
@@ -192,6 +204,14 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
      */
     protected abstract int pruneCache();
 
+    /**
+     * 是否清理过期对象
+     * @return
+     */
+    protected boolean isPruneExpiredActive() {
+        return (timeout != 0) || existCustomTimeout;
+    }
+
 
     /************************************************************** other ****/
 
@@ -225,4 +245,22 @@ public abstract class AbstractCache<K,V> implements yahhCache<K,V> {
     public String toString() {
         return this.cacheObjcetMap.toString();
     }
+
+    /************************************************************** iterator相关 ****/
+
+    @Override
+    public Iterator<V> iterator() {
+        return null;
+    }
+
+    @Override
+    public void forEach(Consumer<? super V> action) {
+
+    }
+
+    @Override
+    public Spliterator<V> spliterator() {
+        return null;
+    }
+
 }
